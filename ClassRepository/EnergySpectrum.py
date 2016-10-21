@@ -1,5 +1,5 @@
 # DESCRIPTION OF THE CLASS:
-
+# Adding one more description line
 # PROVIDE EXAMPLE:
 
 class EnergySpectrum:
