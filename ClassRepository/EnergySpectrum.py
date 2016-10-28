@@ -42,7 +42,10 @@ class EnergySpectrum:
         for k in range(lz_half+1):
             kx[:,:,k]=k
 
-        return kx, ky, kz
+        k2=self.np.zeros((lx,ly,lz_half+1), dtype='float32')
+        self.np.copyto(k2,kx*kx+ky*ky+kz*kz)
+        k2[0,0,0]=1e-6
+        return k2, kx, ky, kz
     
     def cal_newspec(self,cvx,cvy,cvz,k2,nek):
         tmp=(cvx*cvx.conj()+cvy*cvy.conj()+cvz*cvz.conj()).real
