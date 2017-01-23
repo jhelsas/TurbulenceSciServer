@@ -137,3 +137,115 @@ class FFT3Dfield_new:
         self.irfftzb.update_arrays(self.cvt,self.v)        
         self.irfftzb.execute()
         return self.v[:,:,:]
+
+
+class FourierCorrelation:
+	def __init__(self,nx,ny,nz,Nx,Ny,Nz,comm,nproc,rank,fft,dx,dy,dz):
+		self.nx = nx
+		self.ny = ny
+		self.nz = nz
+		self.Nx = Nx
+		self.Ny = Ny
+		self.Nz = Nz
+		self.nproc = nproc
+		self.rank = rank
+		self.comm = comm
+
+		self.ner = int(nx*np.sqrt(3))
+		self.rbins = np.linspace(-0.5*dx,2*np.pi*np.sqrt(3)+0.5*dx,ner+1)
+
+		self.fft = fft
+		
+		self.X = np.zeros((nx,ny,nz), dtype='float32')
+		self.Y = np.zeros((nx,ny,nz), dtype='float32')
+		self.Z = np.zeros((nx,ny,nz), dtype='float32')
+		self.r2 = np.zeros((nx,ny,nz), dtype='float32')
+		self.r2rt = np.zeros((nx,ny,nz), dtype='float32')
+		
+		self.chi = ft.zeros_aligned((nx,ny,nz), dtype='float32')
+		self.chi2 = ft.zeros_aligned((nx,ny,nz), dtype='float32')
+		self.cchi = ft.zeros_aligned((nx,ny,1+(nz//2)), dtype='complex64')
+		self.cchi2 = ft.zeros_aligned((nx,ny,1+(nz//2)), dtype='complex64')
+		self.corr = ft.zeros_aligned((nx,ny,nz),dtype='float32')
+		self.iCorr = ft.zeros_aligned((nx,ny,nz),dtype='float32')
+		
+		self.corrSum = np.zeros(ner,dtype='float32')
+		self.corrF = np.zeros(ner,dtype='float32')  
+		self.r2Sum = np.zeros(ner,dtype='float32')
+		self.r2F = np.zeros(ner,dtype='float32')
+
+		self.corrApend = np.zeros(ner,dtype='float32') 
+		self.r2Apend   = np.zeros(ner,dtype='float32') 
+		self.corrLoc = 0.0
+		self.r2Loc = 0.0
+		return
+
+	def prepareRadialCoordinates():
+		for i in range(self.nx):
+			if (i+self.rank*self.nx < self.Nx//2):
+				self.X[i,:,:] = (i+(self.rank)*(self.nx))*(self.dx)
+			else:
+				self.X[i,:,:] = Lx-(i+(self.rank)*(self.nx))*(self.dx)
+
+		for j in range(self.ny):
+			if (j < self.Ny//2):
+				self.Y[:,j,:] = j*(self.dy)
+			else:
+				self.Y[:,j,:] = Ly-j*(self.dy)
+
+		for k in range(self.nz):
+			if (k < self.Nz//2):
+				self.Z[:,:,k] = k*(self.dz)
+			else:
+				self.Z[:,:,k] = Lz-k*(self.dz)
+
+		self.r2[:,:,:] = (self.X[:,:,:])**2+(self.Y[:,:,:])**2+(self.Z[:,:,:])**2
+		self.r2rt[:,:,:] = np.sqrt(self.r2[:,:,:])
+		return
+
+	def twoPointCorrelation(u,v):
+		self.chi[:,:,:]  = u[:,:,:]
+		self.chi2[:,:,:] = v[:,:,:]
+
+		self.cchi[:,:,:]  = self.fft.forward3Dfft(chi ,self.nx,self.ny,self.nz,
+			                                           self.nproc,self.rank)
+		self.cchi2[:,:,:] = self.fft.forward3Dfft(chi2,self.nx,self.ny,self.nz,
+			                                           self.nproc,self.rank)
+
+		tmp = self.cchi*(self.cchi2.conj())
+		self.corr[:,:,:] = fft.backward3Dfft(tmp,self.nx,self.ny,self.nz,
+			                                 self.nproc,self.rank)
+		return self.corr[:,:,:]
+
+
+	def radialIntegration():
+		corrLoc,redges = np.histogram(self.r2rt,
+			                          range=(0.5*self.dx,(self.ner+0.5)*self.dx),
+			                          bins = self.rbins,weights=self.corr)
+
+		r2Loc,r2edges = np.histogram(self.r2rt,
+			                         range=(0.5*self.dx,(self.ner+0.5)*self.dx),
+			                         bins = self.rbins)
+
+		#######################################
+
+		self.corrLoc = np.float32(corrLoc)
+		self.corrSum = 0.0
+		self.comm.Allreduce([corrLoc,MPI.REAL],[self.corrSum,MPI.REAL],op=MPI.SUM)
+		np.copyto(self.corrF,self.corrSum)
+
+		
+		self.corrApend[:] = self.corrF[:]
+
+		#########################
+
+		self.r2Loc = np.float32(r2Loc)
+		self.r2Sum = 0.0
+		self.comm.Allreduce([r2Loc,MPI.REAL],[self.r2Sum,MPI.REAL],op=MPI.SUM)
+		np.copyto(self.r2F,self.r2Sum)
+
+		self.r2Apend[:] = self.r2F[:]
+
+		return self.corrApend[:],r2Apend[:]
+		
+		#######################################
