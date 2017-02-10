@@ -5,7 +5,6 @@
 import pyfftw as ft 
 import numpy as np
 from mpi4py import MPI
-import SOAPtdb
 from pyJHTDB import libJHTDB
 import sys
 
@@ -50,13 +49,6 @@ class DataDownload:
         outfile=dirName+fileNameInitial+'_'+str(my_id)
         np.savez(outfile,vx=vx,vy=vy,vz=vz,nproc=nproc)
         return
-    
-    def DownldData_cSOAP(self,dataset_name,time,lx,ly,lz,nproc,my_id,auth_token):
-        vx=ft.zeros_aligned((lx,ly,lz), dtype='float32')
-        vy=ft.zeros_aligned((lx,ly,lz), dtype='float32')
-        vz=ft.zeros_aligned((lx,ly,lz), dtype='float32')
-        SOAPtdb.loadvel(vx,vy,vz,lx,ly,lz,my_id)
-        return vx,vy,vz
            
     def LoadDataFromVM(self,dirName,fileNameInitial,nproc,my_id,lx,ly,lz):
         outfile = dirName+fileNameInitial+'_'+str(my_id)+'.npz'
