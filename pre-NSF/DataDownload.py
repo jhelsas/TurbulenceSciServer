@@ -19,7 +19,7 @@ class DataDownload:
         self.SaveDataOnVM(dirName,fileNameInitial,vx,vy,vz,nproc,my_id)
         return
     
-    def DownldData_pyJHTDB(self,dataset_name,time,lx,ly,lz,nproc,my_id,auth_token):
+    def DownldData_pyJHTDB(self,dataset_name,time,lx,ly,lz,nproc,my_id,auth_token,getFunction='Velocity'):
         chkSz=32 #This is the maximum possible. May be increased in future depending on network bandwidth
         slabs=lx//chkSz
         lJHTDB=libJHTDB(auth_token)
@@ -27,7 +27,7 @@ class DataDownload:
         for k in range(slabs):
             start=np.array([my_id*lx+k*chkSz,0,0],dtype=np.int)
             width=np.array([chkSz,ly,lz],dtype=np.int)
-            uAll=lJHTDB.getRawData(time,start,width,data_set=dataset_name,getFunction='Velocity')
+            uAll=lJHTDB.getRawData(time,start,width,data_set=dataset_name,getFunction=getFunction)
             if(k==0):
                 vx=uAll[:,:,:,0]
                 vy=uAll[:,:,:,1]
