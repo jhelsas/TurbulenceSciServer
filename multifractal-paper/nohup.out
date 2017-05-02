@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "mpi-histogram-boxcounting-excursion-dimension.py", line 5, in <module>
+    from mpi4py import MPI
+ImportError: No module named mpi4py
+
+===================================================================================
+=   BAD TERMINATION OF ONE OF YOUR APPLICATION PROCESSES
+=   PID 58167 RUNNING AT panoramix.me.jhu.edu
+=   EXIT CODE: 1
+=   CLEANING UP REMAINING PROCESSES
+=   YOU CAN IGNORE THE BELOW CLEANUP MESSAGES
+===================================================================================
