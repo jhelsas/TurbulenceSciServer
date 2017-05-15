@@ -1,0 +1,24 @@
+Traceback (most recent call last):
+  File "./joint-correlation-scaling.py", line 15, in <module>
+    from mpiFFT4py.slab import R2C
+ImportError: No module named mpiFFT4py.slab
+
+===================================================================================
+=   BAD TERMINATION OF ONE OF YOUR APPLICATION PROCESSES
+=   PID 22427 RUNNING AT panoramix.me.jhu.edu
+=   EXIT CODE: 1
+=   CLEANING UP REMAINING PROCESSES
+=   YOU CAN IGNORE THE BELOW CLEANUP MESSAGES
+===================================================================================
+Traceback (most recent call last):
+  File "./joint-correlation-scaling.py", line 15, in <module>
+    from mpiFFT4py.slab import R2C
+ImportError: No module named mpiFFT4py.slab
+
+===================================================================================
+=   BAD TERMINATION OF ONE OF YOUR APPLICATION PROCESSES
+=   PID 22540 RUNNING AT panoramix.me.jhu.edu
+=   EXIT CODE: 1
+=   CLEANING UP REMAINING PROCESSES
+=   YOU CAN IGNORE THE BELOW CLEANUP MESSAGES
+===================================================================================
